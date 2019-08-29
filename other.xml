@@ -1,0 +1,35 @@
+<application>
+  <component name="PropertiesComponent">
+    <property name="CommitChangeListDialog.DETAILS_SPLITTER_PROPORTION_2" value="0.6775106" />
+    <property name="CommittedChanges.SplitterProportions.0" value="700" />
+    <property name="CommittedChanges.SplitterProportions.1" value="500" />
+    <property name="PACKAGE_FILTER" value="requests&#10;paramiko&#10;scrapy" />
+    <property name="PyCharm.InitialConfiguration" value="true" />
+    <property name="PyCharm.InitialConfiguration.V2" value="true" />
+    <property name="PyCharm.InitialConfiguration.V3" value="true" />
+    <property name="PyCharm.InitialConfiguration.V4" value="true" />
+    <property name="PyCharm.InitialConfiguration.V5" value="true" />
+    <property name="PyCharm.InitialConfiguration.V6" value="true" />
+    <property name="PyCharm.InitialConfiguration.V7" value="true" />
+    <property name="PyCharm.initialConfigurationShown" value="true" />
+    <property name="com.intellij.history.integration.ui.views.DirectoryHistoryDialog.0" value="300" />
+    <property name="file.chooser.recent.files" value="D:/Renly/git_workspace/Crawl_House&#10;D:/Renly/Python/Projects" />
+    <property name="file.gist.reindex.count" value="7319" />
+    <property name="fileTypeChangedCounter" value="1" />
+    <property name="lastTip" value="1" />
+    <property name="vcs.log.changes.splitter.proportion" value="0.6110572" />
+    <property name="vcs.log.details.splitter.proportion" value="0.76870745" />
+  </component>
+  <component name="PyTestFrameworkService">
+    <option name="SDK_TO_PYTEST">
+      <map>
+        <entry key="C:\Users\renly\AppData\Local\Programs\Python\Python37\python.exe" value="false" />
+      </map>
+    </option>
+    <option name="SDK_TO_TRIALTEST">
+      <map>
+        <entry key="C:\Users\renly\AppData\Local\Programs\Python\Python37\python.exe" value="true" />
+      </map>
+    </option>
+  </component>
+</application>
