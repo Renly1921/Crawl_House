@@ -1,6 +1,6 @@
 # coding=UTF-8
 """
-basic function for urllib
+basic function for requests
 """
 
 import re
@@ -9,13 +9,15 @@ import urllib.error
 import requests
 import random
 import json
+import threading
+import time
 
 
 TIMEOUT = 1
 HTTPS_VERIFY_URL = "https://www.xxorg.com/tools/checkproxy/"
 HTTP_VERIFY_URL = "http://icanhazip.com/"
 
-DEBUG_TAG = 1
+DEBUG_TAG = 0
 
 def debug_print(data):
     if DEBUG_TAG == 1:
@@ -63,10 +65,8 @@ def get_random_header():
         "Mozilla/6.0 (iPhone; CPU iPhone OS 8_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/8.0 Mobile/10A5376e Safari/8536.25",]
 
    header = {'User-Agent': random.choice(user_agent)}
-   print("current header info as: ", header)
+   debug_print("Debug: Current header info as: " + str(header))
    return header
-
-
 
 def get_xici_ip_address(header):
     target_url = "https://www.xicidaili.com/nn/1"
@@ -97,9 +97,48 @@ def get_xici_ip_address(header):
     debug_print("Debug: detail proxy info found from https://www.xicidaili.com/nn/1: " + str(ip_list))
     return ip_list
 
+def get_xici_ip_address_all(header,page_counter):
+    i = 1
+    ip_list = []
+    print("****************************************************")
+    print("Start to get proxy ip info from web site www.xicidaili.com")
+    while i <= page_counter:
+        target_url = "https://www.xicidaili.com/nn/" + str(i)
+        debug_print("Start to get proxy ip from page " + str(i))
+        try:
+            resp = requests.get(target_url, timeout=TIMEOUT, headers=header)
+            resp.encoding = resp.apparent_encoding
+            html = resp.text
+        except:
+            html = ""
+            print("ERROR -- unable to open www.xicidaili.com")
+        ips = re.findall('alt="Cn" /></td>.*?'
+                         '<td>(.*?)</td>.*?'
+                         '<td>(.*?)</td>.*?'
+                         '<td>.*?</td>.*?'
+                         '<td class="country">.*?</td>.*?'
+                         '<td>(.*?)</td>', html, re.S)
+        for ip in ips:
+            if ip[2] == "HTTP":
+                proxy_ip = {'http': 'http://' + str(ip[0]) + ":"+ str(ip[1])}
+            elif ip[2] == "HTTPS":
+                proxy_ip = {'https': 'https://' + str(ip[0]) + ":"+ str(ip[1])}
+            ip_list.append(proxy_ip)
+        i = i + 1
+        debug_print("Get proxy ip from page " + str(i) + " finished")
+
+    if ip_list == []:
+        print("No proxy ip found from https://www.xicidaili.com/")
+    else:
+        print("Successfully get %d proxy ip address from https://www.xicidaili.com" % len(ip_list))
+    debug_print("Debug: detail proxy info found from https://www.xicidaili.com: " + str(ip_list))
+    return ip_list
+
+
 def get_ip_in_json():
     with open("proxy_ip_pool.json", "r") as f:
         ip_list = json.load(f)
+    print("****************************************************")
     print("Successfully get %d proxy ip info from json file" % len(ip_list))
     debug_print("Debug: detail proxy info found from json file: " + str(ip_list))
     return ip_list
@@ -107,6 +146,7 @@ def get_ip_in_json():
 def save_ip_in_json(ip_list):
     with open("proxy_ip_pool.json", "w") as f:
         json.dump(ip_list, f)
+    print("****************************************************")
     print("Successfully save %d proxy ip info into json file" % len(ip_list))
     return
 
@@ -118,6 +158,7 @@ def get_random_ip_http(ip_list):
                 http_ip_list.append(ip)
             else:
                 continue
+    print("****************************************************")
     if http_ip_list == []:
         print("Warning: can not get random http proxy ip from list")
         return []
@@ -135,6 +176,7 @@ def get_random_ip_https(ip_list):
                 https_ip_list.append(ip)
             else:
                 continue
+    print("****************************************************")
     if https_ip_list == []:
         print("Warning: can not get random https proxy ip from list")
         return []
@@ -152,6 +194,7 @@ def get_all_ip_http(ip_list):
                 http_ip_list.append(ip)
             else:
                 continue
+    print("****************************************************")
     if http_ip_list == []:
         print("Warning: can not find http proxy ip info from list")
         return []
@@ -167,12 +210,15 @@ def get_all_ip_https(ip_list):
                 https_ip_list.append(ip)
             else:
                 continue
+    print("****************************************************")
     if https_ip_list == []:
         print("Warning: can not find https proxy ip info from list")
         return []
     else:
         print("Successfully find total ", len(https_ip_list), " https proxy in")
         return https_ip_list
+
+'''Single Thread version to verify http/https proxy server
 
 def proxy_http_verify(ip_list):
     header = get_random_header()
@@ -186,24 +232,111 @@ def proxy_http_verify(ip_list):
             else:
                 debug_print("Debug; Proxy may works, but failed to open web page, error info: " + str(resp.status_code) + str(ip))
         #        except (requests.exceptions):
-        except Exception:
-            debug_print("Debug: Invalid proxy ip: " + str(ip))
+        except Exception as e:
+            debug_print("Debug: Invalid proxy ip: " + str(ip) + str(e))
     print("Successfully find valid http proxy ip as: ", valid_http_ip_list)
     return valid_http_ip_list
+
 
 def proxy_https_verify(ip_list):
     header = get_random_header()
     valid_https_ip_list = []
     for ip in ip_list:
         try:
-            resp = requests.get(HTTPS_VERIFY_URL, headers=header, proxies=ip, timeout=TIMEOUT, verify=False)
+            resp = requests.get(HTTPS_VERIFY_URL, headers=header, proxies=ip, timeout=TIMEOUT)
             if resp.status_code == 200:
                 valid_https_ip_list.append(ip)
                 debug_print("Debug: Successfully find valid https proxy ip: " + str(ip))
             else:
                 debug_print("Debug; Proxy may works, but failed to open web page, error info: " + str(resp.status_code) + str(ip))
         #        except (requests.exceptions):
-        except Exception:
-            debug_print("Debug: Invalid proxy ip: " + str(ip))
+        except Exception as e:
+            debug_print("Debug: Invalid proxy ip: " + str(ip) + str(e))
     print("Successfully find valid https proxy ip as: ", valid_https_ip_list)
     return valid_https_ip_list
+'''
+
+class MyThread(threading.Thread):
+    def __init__(self,func,args=()):
+        super(MyThread,self).__init__()
+        self.func = func
+        self.args = args
+    def run(self):
+        self.result = self.func(*self.args)
+    def get_result(self):
+        try:
+            return self.result
+        except Exception:
+            return None
+
+def verify(url, header, proxy_ip):
+    try:
+        resp = requests.get(url, headers=header, proxies=proxy_ip, timeout=TIMEOUT)
+        if resp.status_code == 200:
+            debug_print("Debug: Successfully find valid https proxy ip: " + str(proxy_ip))
+            return proxy_ip
+        else:
+            debug_print(
+                "Debug; Proxy may works, but failed to open web page, error info: " + str(resp.status_code) + str(proxy_ip))
+            return None
+    except Exception as e:
+        debug_print("Debug: Invalid proxy ip: " + str(proxy_ip) + str(e))
+        return None
+
+def proxy_http_verify(ip_list):
+    threads = []
+    valid_ip_list = []
+    i = 1   # start point
+    k = 100  # segment
+    while i <= len(ip_list):
+        print("****************************************************")
+        print("Start verify proxy ip from %d to %d" % (i,i+k))
+        print("Start to create multi-threads to verify proxy ip...")
+        for ip in ip_list[i:i+k]:
+            header = get_random_header()
+            t = MyThread(verify, args=(HTTP_VERIFY_URL, header, ip))
+            threads.append(t)
+        print("Start to run multi-threads to verify proxy ip...")
+        for t in threads:
+            t.start()
+        print("Start to get proxy ip verification result...")
+        for t in threads:
+            t.join()
+            proxy_ip = t.get_result()
+            if proxy_ip != None:
+               valid_ip_list.append(proxy_ip)
+        i = i + k
+        threads = []
+        time.sleep(3)
+    print("All threads finished! Total %d proxy server found" % len(valid_ip_list))
+    print(valid_ip_list)
+    return valid_ip_list
+
+def proxy_https_verify(ip_list):
+    threads = []
+    valid_ip_list = []
+    i = 1   # start point
+    k = 100  # segment
+    while i <= len(ip_list):
+        print("****************************************************")
+        print("Start verify proxy ip from %d to %d" % (i,i+k))
+        print("Start to create multi-threads to verify proxy ip...")
+        for ip in ip_list[i:i+k]:
+            header = get_random_header()
+            t = MyThread(verify, args=(HTTPS_VERIFY_URL, header, ip))
+            threads.append(t)
+        print("Start to run multi-threads to verify proxy ip...")
+        for t in threads:
+            t.start()
+        print("Start to get proxy ip verification result...")
+        for t in threads:
+            t.join()
+            proxy_ip = t.get_result()
+            if proxy_ip != None:
+               valid_ip_list.append(proxy_ip)
+        i = i + k
+        threads = []
+        time.sleep(3)
+    print("All threads finished! Total %d proxy server found" % len(valid_ip_list))
+    print(valid_ip_list)
+    return valid_ip_list

@@ -14,12 +14,12 @@ def main():
     timeout = 1
     header = requests_common.get_random_header()
 
-#    ip_list = requests_common.get_xici_ip_address(header)
-    ip_list = requests_common.get_ip_in_json()
+    ip_list = requests_common.get_xici_ip_address_all(header, 5)
+#    ip_list = requests_common.get_ip_in_json()
 #    requests_common.save_ip_in_json(ip_list)
-    http_ip_list = requests_common.get_all_ip_http(ip_list)
-    print(http_ip_list)
-    requests_common.proxy_http_verify(http_ip_list)
+    https_ip_list = requests_common.get_all_ip_https(ip_list)
+    print(https_ip_list)
+    requests_common.proxy_https_verify(https_ip_list)
 #            data.raise_for_status()
 #            data.encoding = data.apparent_encoding
 #            print(data.text)
