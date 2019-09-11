@@ -13,7 +13,7 @@ import threading
 import time
 
 
-TIMEOUT = 1
+TIMEOUT = 3
 HTTPS_VERIFY_URL = "https://www.xxorg.com/tools/checkproxy/"
 HTTP_VERIFY_URL = "http://icanhazip.com/"
 
