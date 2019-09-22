@@ -144,10 +144,13 @@ def get_ip_in_json():
     return ip_list
 
 def save_ip_in_json(ip_list):
-    with open("proxy_ip_pool.json", "w") as f:
-        json.dump(ip_list, f)
-    print("****************************************************")
-    print("Successfully save %d proxy ip info into json file" % len(ip_list))
+    if ip_list == []:
+        print("No proxy ip info, will not save into json file!")
+    else:
+        with open("proxy_ip_pool.json", "w") as f:
+            json.dump(ip_list, f)
+        print("****************************************************")
+        print("Successfully save %d proxy ip info into json file" % len(ip_list))
     return
 
 def get_random_ip_http(ip_list):
