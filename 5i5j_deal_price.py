@@ -13,7 +13,8 @@ xiaoqu_list_url = "https://hz.5i5j.com/xiaoqu/"
 
 def prepare():
     header = requests_common.get_random_header()
-    proxy_ip_list = requests_common.get_xici_ip_address_all(header, 10)
+#    proxy_ip_list = requests_common.get_xici_ip_address_all(header, 10)
+    proxy_ip_list = requests_common.get_xsdaili_ip_address_all(header)
     https_ip_list = requests_common.get_all_ip_https(proxy_ip_list)
     valid_https_ip_list = requests_common.proxy_https_verify(https_ip_list)
     requests_common.save_ip_in_json(valid_https_ip_list)

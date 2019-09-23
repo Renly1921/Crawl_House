@@ -134,6 +134,35 @@ def get_xici_ip_address_all(header,page_counter):
     debug_print("Debug: detail proxy info found from https://www.xicidaili.com: " + str(ip_list))
     return ip_list
 
+def get_xsdaili_ip_address_all(header):
+    ip_list = []
+    print("****************************************************")
+    print("Start to get proxy ip info from web site http://www.xsdaili.com/")
+    target_url = "http://www.xsdaili.com/dayProxy/ip/1689.html"
+    debug_print("Start to get proxy ip from page " + target_url)
+    try:
+        resp = requests.get(target_url, timeout=TIMEOUT, headers=header)
+        resp.encoding = resp.apparent_encoding
+        html = resp.text
+    except:
+        html = ""
+        print("ERROR -- unable to open http://www.xsdaili.com/")
+    ips = re.findall('<br>.*?(\d.*?)@(.*?)#', html, re.S)
+    for ip in ips:
+        if ip[1] == "HTTP":
+            proxy_ip = {'http': 'http://' + str(ip[0])}
+        elif ip[1] == "HTTPS":
+            proxy_ip = {'https': 'https://' + str(ip[0])}
+        ip_list.append(proxy_ip)
+    debug_print("Get proxy ip from page " + target_url + " finished")
+
+    if ip_list == []:
+        print("No proxy ip found from http://www.xsdaili.com/")
+    else:
+        print("Successfully get %d proxy ip address from http://www.xsdaili.com/" % len(ip_list))
+    debug_print("Debug: detail proxy info found from http://www.xsdaili.com/: " + str(ip_list))
+    return ip_list
+
 
 def get_ip_in_json():
     with open("proxy_ip_pool.json", "r") as f:
