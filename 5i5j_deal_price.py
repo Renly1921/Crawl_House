@@ -166,19 +166,16 @@ def main():
 #    save_xiaoqu_list_in_json(xiaoqu_list)
     xiaoqu_list = get_xiaoqu_list_in_json()
 
-    for xiaoqu in xiaoqu_list[0:3]:
+    for xiaoqu in xiaoqu_list[2:4]:
         xiaoqu_url = "https://hz.5i5j.com/sold/" + xiaoqu + "/"
         current_xiaoqu_deals = crawl_deals_info_recursion('', xiaoqu_url)
         deals = data_clean(current_xiaoqu_deals)
         print("Successfully get history deal info from ", xiaoqu_url)
         save_delta_to_file(deals)
 
-#        all_xiaoqu_deals.extend(current_xiaoqu_deals)
-#    deals = data_clean(all_xiaoqu_deals)
-#    save_to_file(deals)
 #    print(deals)
 
 
 if __name__ == "__main__":
-    prepare()
-#    main()
+#    prepare()
+    main()
