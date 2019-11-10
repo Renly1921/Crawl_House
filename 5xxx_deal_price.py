@@ -1,25 +1,29 @@
 # coding=UTF-8
+# 调用requests的库，爬取历史成交记录，单线程，代理
 
 import re
 import requests
 import requests_common
 import csv
 import json
-import socket
-import traceback
+
 
 timeout = 3
-xiaoqu_list_url = "https://hz.5i5j.com/xiaoqu/"
+xiaoqu_list_url = "https://hz.xxxx.com/xiaoqu/"
+valid_proxy_ip_list = []
+proxy_ip = {}
 
 def prepare():
+    # 寻找代理，验证并存储到文件
     header = requests_common.get_random_header()
-#    proxy_ip_list = requests_common.get_xici_ip_address_all(header, 10)
-    proxy_ip_list = requests_common.get_xsdaili_ip_address_all(header)
+    proxy_ip_list = requests_common.get_xici_ip_address_all(header, 30)
+#    proxy_ip_list = requests_common.get_xsdaili_ip_address_all(header)
     https_ip_list = requests_common.get_all_ip_https(proxy_ip_list)
     valid_https_ip_list = requests_common.proxy_https_verify(https_ip_list)
     requests_common.save_ip_in_json(valid_https_ip_list)
 
 def get_xiaoqu_info(page):
+    #递归的方式获取所有的小区id
     valid_proxy_ip_list = requests_common.get_ip_in_json()
     while True:
         header = requests_common.get_random_header()
@@ -95,25 +99,26 @@ def crawl_deals_info_first_page():
     return draft_deals
 '''
 
-def crawl_deals_info_recursion(page = '', xiaoqu_url=''):
+def crawl_deals_info_recursion(page, xiaoqu_url):
     '''
-    递归方式获取所有该小区的成交价格信息，默认打开的是第一页
+    递归方式获取所有该小区的成交价格信息，page和xiaoqu_url为空的时候显示第一页
+	当某个proxy有效的时候，会一直只用该proxy， head会不停更换
     '''
-    valid_proxy_ip_list = requests_common.get_ip_in_json()
+    global proxy_ip
     while True:
         header = requests_common.get_random_header()
-        proxy_ip = requests_common.get_random_ip_https(valid_proxy_ip_list)
         target_url_with_page = xiaoqu_url + str(page)
         try:
             r = requests.get(target_url_with_page, timeout=timeout, headers=header, proxies=proxy_ip)
             r.raise_for_status()
-            r.encoding = r.apparent_encoding
+#            r.encoding = r.apparent_encoding
+            r.encoding = "rtf-8"
             print("Successfully open web page ", target_url_with_page, " with proxy ip: ", proxy_ip)
             break
         except:
             print("failed open web page ", target_url_with_page, " with proxy ip: ", proxy_ip)
+            proxy_ip = requests_common.get_random_ip_https(valid_proxy_ip_list)
             continue
-    #    print(r.text)
 
     # get deal price info:
     draft_deals = re.findall('<p class="sTit">.*?<strong>(.*?)</strong>.*?'
@@ -121,7 +126,6 @@ def crawl_deals_info_recursion(page = '', xiaoqu_url=''):
                              '<p><em class="dayTime"></em>(.*?)</p>.*?'
                              '<div class="jiage">.*?<strong>(.*?)</strong>.*?'
                              '<p>(.*?)</p>', r.text, re.S)
-
     next_page = re.findall('<div class="pageSty rf"><a href="/sold/\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d/(.*?)/" class="cPage">下一页</a>', r.text, re.S)
     if next_page != []:
         next_page_deals = crawl_deals_info_recursion(next_page[0], xiaoqu_url)
@@ -131,6 +135,7 @@ def crawl_deals_info_recursion(page = '', xiaoqu_url=''):
         print("Seem can not find page info with web address: ", xiaoqu_url)
 #    print(draft_deals)
     return draft_deals
+
 
 def data_clean(draft_deals):
     deals = []
@@ -154,7 +159,7 @@ def save_to_file(deals):
     return
 
 def save_delta_to_file(deals):
-    with open('5i5j_history_deal_price.csv', 'a', newline='')as f:
+    with open('5i5j_history_deal_price.csv', 'a', encoding='utf-8', newline='')as f:
         f_csv = csv.writer(f)
         f_csv.writerows(deals)
     print("Successfully save added info into CSV file！")
@@ -162,18 +167,24 @@ def save_delta_to_file(deals):
 
 def main():
     all_xiaoqu_deals = []
-
-#    xiaoqu_list = get_xiaoqu_info('')
-#    save_xiaoqu_list_in_json(xiaoqu_list)
     xiaoqu_list = get_xiaoqu_list_in_json()
+    global valid_proxy_ip_list  #修改全局变量的值
+    valid_proxy_ip_list = requests_common.get_ip_in_json()
+    global proxy_ip  #修改全局变量的值
+    proxy_ip = requests_common.get_random_ip_https(valid_proxy_ip_list)
 
-    for xiaoqu in xiaoqu_list[2:4]:
-        xiaoqu_url = "https://hz.5i5j.com/sold/" + xiaoqu + "/"
+    i = 0
+    j = 1000
+    k = 0
+
+    for xiaoqu in xiaoqu_list[i:]:
+        xiaoqu_url = "https://hz.xxxx.com/sold/" + xiaoqu + "/"
         current_xiaoqu_deals = crawl_deals_info_recursion('', xiaoqu_url)
         deals = data_clean(current_xiaoqu_deals)
         print("Successfully get history deal info from ", xiaoqu_url)
         save_delta_to_file(deals)
-
+        print(i+k)
+        k = k + 1
 #    print(deals)
 
 

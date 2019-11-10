@@ -4,8 +4,6 @@ basic function for requests
 """
 
 import re
-import urllib.request
-import urllib.error
 import requests
 import random
 import json
@@ -138,7 +136,7 @@ def get_xsdaili_ip_address_all(header):
     ip_list = []
     print("****************************************************")
     print("Start to get proxy ip info from web site http://www.xsdaili.com/")
-    target_url = "http://www.xsdaili.com/dayProxy/ip/1689.html"
+    target_url = "http://www.xsdaili.com/dayProxy/ip/1727.html"
     debug_print("Start to get proxy ip from page " + target_url)
     try:
         resp = requests.get(target_url, timeout=TIMEOUT, headers=header)
@@ -332,11 +330,14 @@ def proxy_http_verify(ip_list):
         for t in threads:
             t.start()
         print("Start to get proxy ip verification result...")
+        temp_i = 0
         for t in threads:
             t.join()
             proxy_ip = t.get_result()
             if proxy_ip != None:
-               valid_ip_list.append(proxy_ip)
+                valid_ip_list.append(proxy_ip)
+                temp_i += 1
+        print("Total %d valid proxy ip has been found" %(temp_i))
         i = i + k
         threads = []
         time.sleep(3)
@@ -361,14 +362,17 @@ def proxy_https_verify(ip_list):
         for t in threads:
             t.start()
         print("Start to get proxy ip verification result...")
+        temp_i = 0
         for t in threads:
             t.join()
             proxy_ip = t.get_result()
             if proxy_ip != None:
-               valid_ip_list.append(proxy_ip)
+                valid_ip_list.append(proxy_ip)
+                temp_i = temp_i + 1
+        print("Total %d valid proxy ip has been found" %(temp_i))
         i = i + k
         threads = []
-        time.sleep(3)
+        time.sleep(5)
     print("All threads finished! Total %d proxy server found" % len(valid_ip_list))
     print(valid_ip_list)
     return valid_ip_list
